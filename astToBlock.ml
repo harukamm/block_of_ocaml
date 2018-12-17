@@ -7,9 +7,9 @@ exception NotImplemented of string
 let pp = Format.fprintf
 (* https://caml.inria.fr/pub/docs/manual-ocaml/libref/Parsetree.html#TYPEexpression *)
 (* https://caml.inria.fr/pub/docs/manual-ocaml/libref/Asttypes.html#TYPErec_flag *)
+(* Reference: https://github.com/davidlazar/xml_of_ocaml *)
 
 (* miscellaneous printers *)
-(* TODO move these *)
 let dom_rec_flag = function
   | Nonrecursive -> raise (NotImplemented "Nonrecursive")
   | Recursive -> raise (NotImplemented "Recursive")
