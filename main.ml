@@ -26,10 +26,10 @@ let show_config () =
   exit 0;
 ;;
 
-let main () =
+let main filename =
   try
     readenv ppf Before_args;
-    Arg.parse [] anonymous usage;
+    anonymous filename;
     Compenv.process_deferred_actions
       (ppf,
        My_compile.implementation,
@@ -88,6 +88,6 @@ let main () =
     exit 2
 
 let _ =
-  Timings.(time All) main ();
+  Timings.(time All) main "tests/let.ml";
   if !Clflags.print_timings then Timings.print Format.std_formatter;
   exit 0
