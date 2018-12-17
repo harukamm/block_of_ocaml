@@ -93,6 +93,7 @@ let implementation ppf sourcefile outputprefix =
     print_endline xmlStr;
     xml_out := Some (xmlStr);
     exit 0;
+    (*
     if !Clflags.print_types then begin
       Warnings.check_fatal ();
       Stypes.dump (Some (outputprefix ^ ".annot"))
@@ -124,6 +125,7 @@ let implementation ppf sourcefile outputprefix =
         remove_file objfile;
         raise x
     end
+    *)
   with x ->
     Stypes.dump (Some (outputprefix ^ ".annot"));
     raise x
