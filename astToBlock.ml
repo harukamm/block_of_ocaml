@@ -71,6 +71,12 @@ and dom_expr expr = match expr.pexp_desc with
   | Pexp_variant _ -> raise (NotImplemented "variant")
   | Pexp_record _ -> raise (NotImplemented "Pexp_record")
   | Pexp_ifthenelse _ -> raise (NotImplemented "ifthenelse")
+  | Pexp_constant (Pconst_integer (int_str, None)) ->
+    dom_int_block (int_of_string int_str)
+  | Pexp_constant (Pconst_integer (int_str, Some suffx)) ->
+    let int_literal = int_str ^ (String.make 1 suffx) in
+    let msg = "integer: " ^ int_literal in
+    raise (NotImplemented msg)
   | _ -> raise (NotImplemented "expr")
 
 (* The type of structure items *)
