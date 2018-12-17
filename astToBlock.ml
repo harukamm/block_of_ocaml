@@ -89,14 +89,6 @@ and dom_struct_items = function
   | [] -> Xml.createNilDom()
   | x :: xs -> dom_struct_item x
 
-and dom_list : 'a. (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
-    = fun ppr f xs -> raise (NotImplemented "dom_list")
-
-and dom_list' : 'a. (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
-    = fun ppr f xs -> match xs with
-        | [] -> raise (NotImplemented "dom_list' empty")
-        | x::r -> raise (NotImplemented "dom_list' cons")
-
 and dom_int_block n = dom_block "int_typed" [dom_field "INT" (string_of_int n)]
 
 and dom_id_block id = dom_block "variables_get_typed" [dom_var_field "VAR" false id]
