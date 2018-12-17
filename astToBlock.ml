@@ -90,7 +90,7 @@ and dom_expr expr = match expr.pexp_desc with
 (* The type of structure items *)
 and dom_struct_item item = match item.pstr_desc with
   | Pstr_eval (expression, _) -> dom_expr expression
-  | Pstr_value (rec_flag, bindings) -> raise (NotImplemented "Pstr_value")
+  | Pstr_value (rec_flag, bindings) -> raise (NotImplemented "let without in")
   | Pstr_primitive (value_description) -> raise (NotImplemented "Pstr_primitive")
   | Pstr_type (rec_flag, type_declarations) -> raise (NotImplemented "Pstr_type")
   | Pstr_typext (type_extension) -> raise (NotImplemented "Pstr_typext")
