@@ -193,14 +193,16 @@ let () =
 
 let parse_all ~tool_name parse_fun invariant_fun magic ppf sourcefile =
   Location.input_name := sourcefile;
-  let inputfile = preprocess sourcefile in
+  let inputfile = sourcefile in
+  (* Disable preprocessor *)
+  (*  let inputfile = preprocess sourcefile in *)
   let ast =
     try file_aux ppf ~tool_name inputfile parse_fun invariant_fun magic
     with exn ->
-      remove_preprocessed inputfile;
+    (* remove_preprocessed inputfile; *)
       raise exn
   in
-  remove_preprocessed inputfile;
+  (* remove_preprocessed inputfile; *)
   ast
 
 let parse_implementation ppf ~tool_name sourcefile =
