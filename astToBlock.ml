@@ -77,6 +77,14 @@ and dom_expr expr = match expr.pexp_desc with
     let int_literal = int_str ^ (String.make 1 suffx) in
     let msg = "integer: " ^ int_literal in
     raise (NotImplemented msg)
+  | Pexp_constant (Pconst_float (float_str, None)) ->
+    dom_float_block (float_of_string float_str)
+  | Pexp_constant (Pconst_float (float_str, Some suffx)) ->
+    let float_literal = float_str ^ (String.make 1 suffx) in
+    let msg = "float: " ^ float_literal in
+    raise (NotImplemented msg)
+  | Pexp_constant (Pconst_char c) -> raise (NotImplemented "char literal")
+  | Pexp_constant (Pconst_string _) -> raise (NotImplemented "string literal")
   | _ -> raise (NotImplemented "expr")
 
 (* The type of structure items *)
@@ -102,6 +110,8 @@ and dom_struct_items = function
   | x :: xs -> dom_struct_item x
 
 and dom_int_block n = dom_block "int_typed" [dom_field "INT" (string_of_int n)]
+
+and dom_float_block n = dom_block "float_typed" [dom_field "Float" (string_of_float n)]
 
 and dom_id_block id = dom_block "variables_get_typed" [dom_var_field "VAR" false id]
 
