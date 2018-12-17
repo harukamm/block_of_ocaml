@@ -38,7 +38,7 @@ let dom_strings () = raise (NotImplemented "dom_strings")
 
 (* The type of identifiers (including path like Foo(X).Bar.y) *)
 let rec dom_ident = function
-  | Lident (name) -> raise (NotImplemented "Lident")
+  |	Lident (name) -> dom_id_block name
     (* i . i *) (** Access in module *)
   | Ldot (ident, name) -> raise (NotImplemented "LDot")
     (* i i *) (** Application *)
