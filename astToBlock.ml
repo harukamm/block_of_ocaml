@@ -56,7 +56,7 @@ and dom_patt patt = match patt with
 (* The type of expressions *)
 and dom_expr expr = match expr.pexp_desc with
   |	Pexp_ident loc -> dom_ident loc.txt
-  |	Pexp_let (rec_flag, binding, expr) -> raise (NotImplemented "let")
+  |	Pexp_let (rec_flag, bindings, expr) -> dom_let_block rec_flag bindings expr
   |	Pexp_fun _ -> raise (NotImplemented "fun")
   |	Pexp_apply _ -> raise (NotImplemented "apply")
   |	Pexp_match _ -> raise (NotImplemented "match")
@@ -104,28 +104,11 @@ and dom_id_block id = dom_block "variables_get_typed" [dom_var_field "VAR" false
 and dom_bool_block isTrue =
     let upper_value = if isTrue then "TRUE" else "FALSE" in
     dom_block "logic_boolean_typed" [dom_field "BOOL" upper_value]
-(*
-and dom_let_block binding expr2 = match binding with
-  | BiNil(loc) -> raise (NotImplemented "BiNil")
-    (* bi, bi *) (* let a = 42, dom_c f = function 43 *)
-  | BiAnd(loc, binding1, binding2) -> raise (NotImplemented "BiAnd")
-    (* p = e *) (* let patt = expr *)
-  | BiEq(loc, patt, expr1) ->
-      begin
-        match patt with
-        | PaId(loc, IdLid(_, name)) ->
-          let field = dom_var_field "VAR" true name in
-          let dom = dom_block "let_typed" [field] in
-          let domExp1 = dom_expr expr1 in
-          let domExp2 = dom_expr expr2 in
-          let dom = append_value dom "EXP1" domExp1 in
-          let dom = append_value dom "EXP2" domExp2 in
-          dom
-        | _ -> raise (NotImplemented "BiEq")
-      end
-    (* $s$ *)
-  | BiAnt(loc, name) -> raise (NotImplemented "BiAnt")
-*)
+
+and dom_let_block rec_flag bindings expr = match (rec_flag, bindings, exp) with
+  | (Recursive, _, _) -> raise (NotImplemented "Letrec")
+  | (Nonrecursive, _, _) -> raise (NotImplemented "Let")
+
 and dom_app_block expr1 expr2 =
     let domExp1 = dom_expr expr1 in
     let domExp2 = dom_expr expr2 in
