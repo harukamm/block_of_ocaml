@@ -59,7 +59,12 @@ and dom_expr expr = match expr.pexp_desc with
   | Pexp_let (rec_flag, [binding], expr) -> dom_let_block rec_flag binding expr
   | Pexp_let _ -> raise (NotImplemented "pexp_let")
   | Pexp_fun _ -> raise (NotImplemented "fun")
-  | Pexp_apply _ -> raise (NotImplemented "apply")
+  | Pexp_apply (exp1, []) -> assert false
+  | Pexp_apply (exp1, exp2 :: rest) ->
+    if List.exists (fun (label, _) -> label <> Nolabel) (exp2 :: rest) then
+      raise (NotImplemented "argument with label")
+    else
+      dom_app_lst_block exp1 (snd exp2) (List.map snd rest)
   | Pexp_match _ -> raise (NotImplemented "match")
   | Pexp_try _ -> raise (NotImplemented "try")
   | Pexp_tuple _ -> raise (NotImplemented "tuple")
@@ -112,13 +117,20 @@ and dom_let_block rec_flag binding exp2 = match (rec_flag, binding, exp2) with
         dom
       | _ -> raise (NotImplemented "pattern in let")
 
+and dom_app_lst_block exp1 exp2 exp2_rest =
+  let left = dom_app_block exp1 exp2 in
+  List.fold_left (fun dom exp -> dom_app_block' dom (dom_expr exp)) left exp2_rest
+
+and dom_app_block' dom_exp1 dom_exp2 =
+  let dom = dom_block "lambda_app_typed" [] in
+  let dom = append_value dom "FUN" dom_exp1 in
+  let dom = append_value dom "ARG" dom_exp2 in
+  dom
+
 and dom_app_block expr1 expr2 =
   let domExp1 = dom_expr expr1 in
   let domExp2 = dom_expr expr2 in
-  let dom = dom_block "lambda_app_typed" [] in
-  let dom = append_value dom "FUN" domExp1 in
-  let dom = append_value dom "ARG" domExp2 in
-  dom
+  dom_app_block' domExp1 domExp2
 
 and dom_block typeName children =
   Xml.createDom "block" [("type", typeName)] children
