@@ -94,33 +94,33 @@ and dom_int_block n = dom_block "int_typed" [dom_field "INT" (string_of_int n)]
 and dom_id_block id = dom_block "variables_get_typed" [dom_var_field "VAR" false id]
 
 and dom_bool_block isTrue =
-    let upper_value = if isTrue then "TRUE" else "FALSE" in
-    dom_block "logic_boolean_typed" [dom_field "BOOL" upper_value]
+  let upper_value = if isTrue then "TRUE" else "FALSE" in
+  dom_block "logic_boolean_typed" [dom_field "BOOL" upper_value]
 
 and dom_let_block rec_flag bindings expr = match (rec_flag, bindings, exp) with
   | (Recursive, _, _) -> raise (NotImplemented "Letrec")
   | (Nonrecursive, _, _) -> raise (NotImplemented "Let")
 
 and dom_app_block expr1 expr2 =
-    let domExp1 = dom_expr expr1 in
-    let domExp2 = dom_expr expr2 in
-    let dom = dom_block "lambda_app_typed" [] in
-    let dom = append_value dom "FUN" domExp1 in
-    let dom = append_value dom "ARG" domExp2 in
-    dom
+  let domExp1 = dom_expr expr1 in
+  let domExp2 = dom_expr expr2 in
+  let dom = dom_block "lambda_app_typed" [] in
+  let dom = append_value dom "FUN" domExp1 in
+  let dom = append_value dom "ARG" domExp2 in
+  dom
 
 and dom_block typeName children =
-    Xml.createDom "block" [("type", typeName)] children
+  Xml.createDom "block" [("type", typeName)] children
 
 and dom_block_value name child =
-    Xml.createDom "value" [("name", name)] [child]
+  Xml.createDom "value" [("name", name)] [child]
 
 and append_value xml name child =
-    Xml.appendChild xml (dom_block_value name child)
+  Xml.appendChild xml (dom_block_value name child)
 
 and dom_field name text =
-    Xml.createDom "field" [("name", name)] [Xml.createTextDom text]
+  Xml.createDom "field" [("name", name)] [Xml.createTextDom text]
 
 and dom_var_field name isValue text =
-    let field = dom_field name text in
-    Xml.setAttribute field ("isvalue", if isValue then "true" else "false")
+  let field = dom_field name text in
+  Xml.setAttribute field ("isvalue", if isValue then "true" else "false")
