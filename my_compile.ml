@@ -29,6 +29,8 @@ open Compenv
 
 let tool_name = "ocamlc"
 
+let xml_out = ref None
+
 let interface ppf sourcefile outputprefix =
   Compmisc.init_path false;
   let modulename = module_of_filename ppf sourcefile outputprefix in
@@ -88,6 +90,8 @@ let implementation ppf sourcefile outputprefix =
     remove_file (outputprefix ^ ".cmi");
     let xml = AstToBlock.dom_struct_items !structure in
     let xmlStr = Xml.print xml in print_endline xmlStr;
+    print_endline xmlStr;
+    xml_out := Some (xmlStr);
     exit 0;
     if !Clflags.print_types then begin
       Warnings.check_fatal ();
