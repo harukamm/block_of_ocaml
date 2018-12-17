@@ -75,6 +75,5 @@ let implementation ppf sourcefile =
   structure := str;
   let xml = AstToBlock.dom_struct_items !structure in
   let xmlStr = Xml.print xml in print_endline xmlStr;
-  print_endline xmlStr;
   xml_out := Some (xmlStr);
   xmlStr
