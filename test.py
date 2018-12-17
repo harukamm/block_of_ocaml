@@ -69,7 +69,7 @@ def run_test(filename):
   code = code.replace('\n', '')
 
   try:
-    re = subprocess.check_output(["./block_of_ocaml", source],
+    re = subprocess.check_output(["./block_of_ocaml", code],
         stderr=subprocess.STDOUT)
     try:
       xml_root = ElementTree.fromstring(re)
