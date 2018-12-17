@@ -44,6 +44,22 @@ let rec dom_ident = function
     (* i i *) (** Application *)
   | Lapply (ident1, ident2) -> raise (NotImplemented "Lapply")
 
+and dom_constant = function
+  | Pconst_integer (int_str, None) ->
+    dom_int_block (int_of_string int_str)
+  | Pconst_integer (int_str, Some suffx) ->
+    let int_literal = int_str ^ (String.make 1 suffx) in
+    let msg = "integer: " ^ int_literal in
+    raise (NotImplemented msg)
+  | Pconst_float (float_str, None) ->
+    dom_float_block (float_of_string float_str)
+  | Pconst_float (float_str, Some suffx) ->
+    let float_literal = float_str ^ (String.make 1 suffx) in
+    let msg = "float: " ^ float_literal in
+    raise (NotImplemented msg)
+  | Pconst_char c -> raise (NotImplemented "char literal")
+  | Pconst_string _ -> raise (NotImplemented "string literal")
+
 (* The type of patterns *)
 and dom_patt patt = match patt with
   | Ppat_any -> raise (NotImplemented "Any")
@@ -71,20 +87,7 @@ and dom_expr expr = match expr.pexp_desc with
   | Pexp_variant _ -> raise (NotImplemented "variant")
   | Pexp_record _ -> raise (NotImplemented "Pexp_record")
   | Pexp_ifthenelse _ -> raise (NotImplemented "ifthenelse")
-  | Pexp_constant (Pconst_integer (int_str, None)) ->
-    dom_int_block (int_of_string int_str)
-  | Pexp_constant (Pconst_integer (int_str, Some suffx)) ->
-    let int_literal = int_str ^ (String.make 1 suffx) in
-    let msg = "integer: " ^ int_literal in
-    raise (NotImplemented msg)
-  | Pexp_constant (Pconst_float (float_str, None)) ->
-    dom_float_block (float_of_string float_str)
-  | Pexp_constant (Pconst_float (float_str, Some suffx)) ->
-    let float_literal = float_str ^ (String.make 1 suffx) in
-    let msg = "float: " ^ float_literal in
-    raise (NotImplemented msg)
-  | Pexp_constant (Pconst_char c) -> raise (NotImplemented "char literal")
-  | Pexp_constant (Pconst_string _) -> raise (NotImplemented "string literal")
+  | Pexp_constant constant -> dom_constant constant
   | _ -> raise (NotImplemented "expr")
 
 (* The type of structure items *)
