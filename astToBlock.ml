@@ -11,8 +11,8 @@ let pp = Format.fprintf
 (* miscellaneous printers *)
 (* TODO move these *)
 let dom_rec_flag = function
-  |	Nonrecursive -> raise (NotImplemented "Nonrecursive")
-  |	Recursive -> raise (NotImplemented "Recursive")
+  | Nonrecursive -> raise (NotImplemented "Nonrecursive")
+  | Recursive -> raise (NotImplemented "Recursive")
 
 let dom_direction_flag = function
   | Upto -> raise (NotImplemented "Upto")
@@ -46,44 +46,44 @@ let rec dom_ident = function
 
 (* The type of patterns *)
 and dom_patt patt = match patt with
-  |	Ppat_any -> raise (NotImplemented "Any")
-  |	Ppat_var (loc) -> raise (NotImplemented ("tvar" ^ loc.txt))
-  |	Ppat_tuple (patt_list) -> raise (NotImplemented "tuplepatt")
-  |	Ppat_record _ -> raise (NotImplemented "patt-record")
-  |	Ppat_type _ -> raise (NotImplemented "patt-type")
+  | Ppat_any -> raise (NotImplemented "Any")
+  | Ppat_var (loc) -> raise (NotImplemented ("tvar" ^ loc.txt))
+  | Ppat_tuple (patt_list) -> raise (NotImplemented "tuplepatt")
+  | Ppat_record _ -> raise (NotImplemented "patt-record")
+  | Ppat_type _ -> raise (NotImplemented "patt-type")
   | _ -> raise (NotImplemented "patt")
 
 (* The type of expressions *)
 and dom_expr expr = match expr.pexp_desc with
-  |	Pexp_ident loc -> dom_ident loc.txt
-  |	Pexp_let (rec_flag, bindings, expr) -> dom_let_block rec_flag bindings expr
-  |	Pexp_fun _ -> raise (NotImplemented "fun")
-  |	Pexp_apply _ -> raise (NotImplemented "apply")
-  |	Pexp_match _ -> raise (NotImplemented "match")
-  |	Pexp_try _ -> raise (NotImplemented "try")
-  |	Pexp_tuple _ -> raise (NotImplemented "tuple")
-  |	Pexp_variant _ -> raise (NotImplemented "variant")
-  |	Pexp_record _ -> raise (NotImplemented "Pexp_record")
-  |	Pexp_ifthenelse _ -> raise (NotImplemented "ifthenelse")
+  | Pexp_ident loc -> dom_ident loc.txt
+  | Pexp_let (rec_flag, bindings, expr) -> dom_let_block rec_flag bindings expr
+  | Pexp_fun _ -> raise (NotImplemented "fun")
+  | Pexp_apply _ -> raise (NotImplemented "apply")
+  | Pexp_match _ -> raise (NotImplemented "match")
+  | Pexp_try _ -> raise (NotImplemented "try")
+  | Pexp_tuple _ -> raise (NotImplemented "tuple")
+  | Pexp_variant _ -> raise (NotImplemented "variant")
+  | Pexp_record _ -> raise (NotImplemented "Pexp_record")
+  | Pexp_ifthenelse _ -> raise (NotImplemented "ifthenelse")
   | _ -> raise (NotImplemented "expr")
 
 (* The type of structure items *)
 and dom_struct_item item = match item.pstr_desc with
-  |	Pstr_eval (expression, _) -> dom_expr expression
-  |	Pstr_value (rec_flag, bindings) -> raise (NotImplemented "Pstr_value")
-  |	Pstr_primitive (value_description) -> raise (NotImplemented "Pstr_primitive")
-  |	Pstr_type (rec_flag, type_declarations) -> raise (NotImplemented "Pstr_type")
-  |	Pstr_typext (type_extension) -> raise (NotImplemented "Pstr_typext")
-  |	Pstr_exception (extension_constructor) -> raise (NotImplemented "exception")
-  |	Pstr_module (module_binding) -> raise (NotImplemented "Pstr_module")
-  |	Pstr_recmodule (module_bindings) -> raise (NotImplemented "Pstr_recmodule")
-  |	Pstr_modtype (module_type_declaration) -> raise (NotImplemented "Pstr_modtype")
-  |	Pstr_open (open_description) -> raise (NotImplemented "Pstr_modtype")
-  |	Pstr_class (class_declarations) -> raise (NotImplemented "Pstr_class")
-  |	Pstr_class_type (class_type_declarations) -> raise (NotImplemented "Pstr_class_type")
-  |	Pstr_include (include_declaration) -> raise (NotImplemented "Pstr_include")
-  |	Pstr_attribute (attribute) -> raise (NotImplemented "Pstr_attribute")
-  |	Pstr_extension (extension, attributes) -> raise (NotImplemented "Pstr_extension")
+  | Pstr_eval (expression, _) -> dom_expr expression
+  | Pstr_value (rec_flag, bindings) -> raise (NotImplemented "Pstr_value")
+  | Pstr_primitive (value_description) -> raise (NotImplemented "Pstr_primitive")
+  | Pstr_type (rec_flag, type_declarations) -> raise (NotImplemented "Pstr_type")
+  | Pstr_typext (type_extension) -> raise (NotImplemented "Pstr_typext")
+  | Pstr_exception (extension_constructor) -> raise (NotImplemented "exception")
+  | Pstr_module (module_binding) -> raise (NotImplemented "Pstr_module")
+  | Pstr_recmodule (module_bindings) -> raise (NotImplemented "Pstr_recmodule")
+  | Pstr_modtype (module_type_declaration) -> raise (NotImplemented "Pstr_modtype")
+  | Pstr_open (open_description) -> raise (NotImplemented "Pstr_modtype")
+  | Pstr_class (class_declarations) -> raise (NotImplemented "Pstr_class")
+  | Pstr_class_type (class_type_declarations) -> raise (NotImplemented "Pstr_class_type")
+  | Pstr_include (include_declaration) -> raise (NotImplemented "Pstr_include")
+  | Pstr_attribute (attribute) -> raise (NotImplemented "Pstr_attribute")
+  | Pstr_extension (extension, attributes) -> raise (NotImplemented "Pstr_extension")
 
 and dom_struct_items = function
   | [] -> Xml.createNilDom()
