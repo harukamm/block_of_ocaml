@@ -74,6 +74,7 @@ and dom_expr expr = match expr.pexp_desc with
   | Pexp_ident loc -> dom_ident loc.txt
   | Pexp_let (rec_flag, [binding], expr) -> dom_let_block rec_flag binding expr
   | Pexp_let _ -> raise (NotImplemented "pexp_let")
+  | Pexp_function _ -> raise (NotImplemented "function")
   | Pexp_fun _ -> raise (NotImplemented "fun")
   | Pexp_apply (exp1, []) -> assert false
   | Pexp_apply (exp1, exp2 :: rest) ->
@@ -84,11 +85,34 @@ and dom_expr expr = match expr.pexp_desc with
   | Pexp_match _ -> raise (NotImplemented "match")
   | Pexp_try _ -> raise (NotImplemented "try")
   | Pexp_tuple _ -> raise (NotImplemented "tuple")
+  | Pexp_construct _ -> raise (NotImplemented "construct")
   | Pexp_variant _ -> raise (NotImplemented "variant")
   | Pexp_record _ -> raise (NotImplemented "Pexp_record")
   | Pexp_ifthenelse _ -> raise (NotImplemented "ifthenelse")
   | Pexp_constant constant -> dom_constant constant
-  | _ -> raise (NotImplemented "expr")
+  | Pexp_field _ -> raise (NotImplemented "field")
+  | Pexp_setfield _ -> raise (NotImplemented "set field")
+  | Pexp_array _ -> raise (NotImplemented "array")
+  | Pexp_sequence _ -> raise (NotImplemented "sequence ';'")
+  | Pexp_while _ -> raise (NotImplemented "while")
+  | Pexp_for _ -> raise (NotImplemented "for")
+  | Pexp_constraint _ -> raise (NotImplemented "constrait")
+  | Pexp_coerce _ -> raise (NotImplemented "coerce")
+  | Pexp_send _ -> raise (NotImplemented "send")
+  | Pexp_new _ -> raise (NotImplemented "new")
+  | Pexp_setinstvar _ -> raise (NotImplemented "setinstvar")
+  | Pexp_override _ -> raise (NotImplemented "override")
+  | Pexp_letmodule _ -> raise (NotImplemented "letmodule")
+  | Pexp_letexception _ -> raise (NotImplemented "letexception")
+  | Pexp_assert _ -> raise (NotImplemented "assert")
+  | Pexp_lazy _ -> raise (NotImplemented "lazy")
+  | Pexp_poly _ -> raise (NotImplemented "poly")
+  | Pexp_object _ -> raise (NotImplemented "object")
+  | Pexp_newtype _ -> raise (NotImplemented "newtype")
+  | Pexp_pack _ -> raise (NotImplemented "pack")
+  | Pexp_open _ -> raise (NotImplemented "open")
+  | Pexp_extension _ -> raise (NotImplemented "extension")
+  | Pexp_unreachable -> raise (NotImplemented ".")
 
 (* The type of structure items *)
 and dom_struct_item item = match item.pstr_desc with
