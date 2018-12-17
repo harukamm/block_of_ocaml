@@ -28,68 +28,15 @@ let show_config () =
 
 let block_of_ocaml code =
   try
-    let xml_str = My_compile.implementation ppf code code in
+    let xml_str = My_compile.implementation ppf code in
     (Some xml_str, None)
   with e ->
     (None, Some e)
 
 let main filename =
   try
-    readenv ppf Before_args;
-    anonymous filename;
-    Compenv.process_deferred_actions
-      (ppf,
-       My_compile.implementation,
-       My_compile.interface,
-       ".cmo",
-       ".cma");
-    readenv ppf Before_link;
-    if
-      List.length (List.filter (fun x -> !x)
-                      [make_archive;make_package;compile_only;output_c_object])
-        > 1
-    then
-      if !print_types then
-        fatal "Option -i is incompatible with -pack, -a, -output-obj"
-      else
-        fatal "Please specify at most one of -pack, -a, -c, -output-obj";
-    if !make_archive then begin
-      Compmisc.init_path false;
-
-      Bytelibrarian.create_archive ppf
-                                   (Compenv.get_objfiles ~with_ocamlparam:false)
-                                   (extract_output !output_name);
-      Warnings.check_fatal ();
-    end
-    else if !make_package then begin
-      Compmisc.init_path false;
-      let extracted_output = extract_output !output_name in
-      let revd = get_objfiles ~with_ocamlparam:false in
-      Bytepackager.package_files ppf (Compmisc.initial_env ())
-        revd (extracted_output);
-      Warnings.check_fatal ();
-    end
-    else if not !compile_only && !objfiles <> [] then begin
-      let target =
-        if !output_c_object then
-          let s = extract_output !output_name in
-          if (Filename.check_suffix s Config.ext_obj
-            || Filename.check_suffix s Config.ext_dll
-            || Filename.check_suffix s ".c")
-          then s
-          else
-            fatal
-              (Printf.sprintf
-                 "The extension of the output file must be .c, %s or %s"
-                 Config.ext_obj Config.ext_dll
-              )
-        else
-          default_output !output_name
-      in
-      Compmisc.init_path false;
-      Bytelink.link ppf (get_objfiles ~with_ocamlparam:true) target;
-      Warnings.check_fatal ();
-    end;
+    let _ = My_compile.implementation ppf filename in
+    ()
   with x ->
     Location.report_exception ppf x;
     exit 2
