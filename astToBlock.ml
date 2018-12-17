@@ -50,6 +50,8 @@ and dom_single_constructor = function
       dom_bool_block true
     else if ctr_name = "false" then
       dom_bool_block false
+    else if ctr_name = "[]" then
+      dom_list_block []
     else
       raise (NotImplemented ("constructor: " ^ ctr_name))
   | _ -> raise (NotImplemented "constructor")
@@ -185,6 +187,18 @@ and dom_app_block expr1 expr2 =
   let domExp1 = dom_expr expr1 in
   let domExp2 = dom_expr expr2 in
   dom_app_block' domExp1 domExp2
+
+and dom_list_block exprs =
+  let rec h dom es = match es with
+    | [] -> dom
+    | expr :: rest ->
+      let nth = (List.length exprs) - (List.length es) in
+      let nstr = string_of_int nth in
+      let dom' = append_value dom ("ADD" ^ nstr) (dom_expr expr) in
+      h dom' rest
+  in
+  let dom = dom_block "lists_create_with_typed" [] in
+  h dom exprs
 
 and dom_block typeName children =
   Xml.createDom "block" [("type", typeName)] children
