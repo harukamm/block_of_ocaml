@@ -34,22 +34,15 @@ let get_converter_div() =
 
 let converter_for_js input =
   let input' = Js.to_string input in
-  try
-    begin
-      let _ = Main.main input' in
-      let (opt_xml, error) =  (!My_compile.xml_out, None (* debug中 *)) in
-      match (opt_xml, error) with
-        | (Some str, None) ->
-          Js.string str
-        | (None, None) ->
-          Js.string "nande~~"
-        | (_, Some (AstToBlock.NotImplemented(ctr))) ->
-          Js.string "notImplementedAST"
-        | (_, Some e) ->
-          Js.string "unknown_error"
-    end
-  with Arg.Bad msg -> Js.string msg
-     |  _ -> Js.string "error-desu!"
+  match (Main.block_of_ocaml input') with
+    | (Some str, None) ->
+      Js.string str
+    | (None, None) ->
+      Js.string "nande~~"
+    | (_, Some (AstToBlock.NotImplemented(ctr))) ->
+      Js.string ("notImplementedAST" ^ ctr)
+    | (_, Some e) ->
+      Js.string "unknown_error"
 
 let get_xml_out () =
   match !My_compile.xml_out with

@@ -26,6 +26,13 @@ let show_config () =
   exit 0;
 ;;
 
+let block_of_ocaml code =
+  try
+    let xml_str = My_compile.implementation ppf code code in
+    (Some xml_str, None)
+  with e ->
+    (None, Some e)
+
 let main filename =
   try
     readenv ppf Before_args;
