@@ -44,6 +44,16 @@ let rec dom_ident = function
     (* i i *) (** Application *)
   | Lapply (ident1, ident2) -> raise (NotImplemented "Lapply")
 
+and dom_single_constructor = function
+  | {txt=Lident (ctr_name)} ->
+    if ctr_name = "true" then
+      dom_bool_block true
+    else if ctr_name = "false" then
+      dom_bool_block false
+    else
+      raise (NotImplemented ("constructor: " ^ ctr_name))
+  | _ -> raise (NotImplemented "constructor")
+
 and dom_constant = function
   | Pconst_integer (int_str, None) ->
     dom_int_block (int_of_string int_str)
@@ -85,7 +95,8 @@ and dom_expr expr = match expr.pexp_desc with
   | Pexp_match _ -> raise (NotImplemented "match")
   | Pexp_try _ -> raise (NotImplemented "try")
   | Pexp_tuple _ -> raise (NotImplemented "tuple")
-  | Pexp_construct _ -> raise (NotImplemented "construct")
+  | Pexp_construct (ctr, None) -> dom_single_constructor (ctr)
+  | Pexp_construct _ -> raise (NotImplemented "constructor")
   | Pexp_variant _ -> raise (NotImplemented "variant")
   | Pexp_record _ -> raise (NotImplemented "Pexp_record")
   | Pexp_ifthenelse _ -> raise (NotImplemented "ifthenelse")
