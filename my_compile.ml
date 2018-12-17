@@ -76,8 +76,7 @@ let implementation ppf sourcefile outputprefix =
   Env.set_unit_name modulename;
   let env = Compmisc.initial_env() in
   try
-    let (typedtree, coercion) =
-      let str = Pparse.parse_implementation ~tool_name ppf sourcefile in
+      let str = My_parse.parse_implementation ~tool_name ppf sourcefile in
       structure := str;
       str (* Pparse.parse_implementation ~tool_name ppf sourcefile *)
       ++ print_if ppf Clflags.dump_parsetree Printast.implementation
