@@ -148,29 +148,33 @@ let open_and_check_magic inputfile ast_magic =
   in
   (ic, is_ast_file)
 
-let file_aux ppf ~tool_name inputfile parse_fun invariant_fun ast_magic =
-  let (ic, is_ast_file) = open_and_check_magic inputfile ast_magic in
+let file_aux ppf ~tool_name code parse_fun invariant_fun ast_magic =
+(*  let (ic, is_ast_file) = open_and_check_magic inputfile ast_magic in *)
   let ast =
     try
-      if is_ast_file then begin
+      if false then begin
+      (* if is_ast_file then begin *)
+        (*
         if !Clflags.fast then
           (* FIXME make this a proper warning *)
           fprintf ppf "@[Warning: %s@]@."
             "option -unsafe used with a preprocessor returning a syntax tree";
         Location.input_name := input_value ic;
-        input_value ic
+        input_value ic *)
+        assert false
       end else begin
-        seek_in ic 0;
-        Location.input_name := inputfile;
-        let lexbuf = Lexing.from_channel ic in
-        Location.init lexbuf inputfile;
+        (* seek_in ic 0; *)
+        (* Location.input_name := inputfile; *)
+        let lexbuf = Lexing.from_string code in
+        (* let lexbuf = Lexing.from_channel ic in *)
+        (* Location.init lexbuf inputfile; *)
         parse_fun lexbuf
       end
-    with x -> close_in ic; raise x
+    with x -> (* close_in ic; *) raise x
   in
-  close_in ic;
-  let ast = apply_rewriters ~restore:false ~tool_name ast_magic ast in
-  if is_ast_file || !Clflags.all_ppx <> [] then invariant_fun ast;
+(*  close_in ic; *)
+(*  let ast = apply_rewriters ~restore:false ~tool_name ast_magic ast in *)
+(*  if is_ast_file || !Clflags.all_ppx <> [] then invariant_fun ast; *)
   ast
 
 let file ppf ~tool_name inputfile parse_fun ast_magic =
@@ -191,13 +195,12 @@ let () =
       | _ -> None
     )
 
-let parse_all ~tool_name parse_fun invariant_fun magic ppf sourcefile =
-  Location.input_name := sourcefile;
-  let inputfile = sourcefile in
+let parse_all ~tool_name parse_fun invariant_fun magic ppf code =
+  (* Location.input_name := code; *)
   (* Disable preprocessor *)
   (*  let inputfile = preprocess sourcefile in *)
   let ast =
-    try file_aux ppf ~tool_name inputfile parse_fun invariant_fun magic
+    try file_aux ppf ~tool_name code parse_fun invariant_fun magic
     with exn ->
     (* remove_preprocessed inputfile; *)
       raise exn
@@ -205,11 +208,11 @@ let parse_all ~tool_name parse_fun invariant_fun magic ppf sourcefile =
   (* remove_preprocessed inputfile; *)
   ast
 
-let parse_implementation ppf ~tool_name sourcefile =
+let parse_implementation ppf ~tool_name code =
   parse_all ~tool_name
-    (Timings.(time (Parsing sourcefile)) Parse.implementation)
+    (Timings.(time (Parsing code)) Parse.implementation)
     Ast_invariants.structure
-    Config.ast_impl_magic_number ppf sourcefile
+    Config.ast_impl_magic_number ppf code
 let parse_interface ppf ~tool_name sourcefile =
   parse_all ~tool_name
     (Timings.(time (Parsing sourcefile)) Parse.interface)

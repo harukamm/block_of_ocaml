@@ -42,6 +42,8 @@ let main filename =
     exit 2
 
 let _ =
-  Timings.(time All) main "tests/let.ml";
-  if !Clflags.print_timings then Timings.print Format.std_formatter;
-  exit 0
+  let argc = Array.length Sys.argv in
+  if 2 <= argc then
+    (* Timings.(time All) main "tests/let.ml"; *)
+    Timings.(time All) main Sys.argv.(1); (* "let x= 1 in x"; *)
+    if !Clflags.print_timings then Timings.print Format.std_formatter;
