@@ -102,7 +102,8 @@ and dom_expr expr = match expr.pexp_desc with
   | Pexp_construct (ctr, opt) -> dom_construct (ctr, opt)
   | Pexp_variant _ -> raise (NotImplemented "variant")
   | Pexp_record _ -> raise (NotImplemented "Pexp_record")
-  | Pexp_ifthenelse _ -> raise (NotImplemented "ifthenelse")
+  | Pexp_ifthenelse (cond, e1, Some e2) -> dom_ifthenelse_block cond e1 e2
+  | Pexp_ifthenelse (cond, e1, None) -> raise (NotImplemented "if-without-else")
   | Pexp_constant constant -> dom_constant constant
   | Pexp_field _ -> raise (NotImplemented "field")
   | Pexp_setfield _ -> raise (NotImplemented "set field")
@@ -159,6 +160,16 @@ and dom_id_block id = dom_block "variables_get_typed" [dom_var_field "VAR" false
 and dom_bool_block isTrue =
   let upper_value = if isTrue then "TRUE" else "FALSE" in
   dom_block "logic_boolean_typed" [dom_field "BOOL" upper_value]
+
+and dom_ifthenelse_block cond e1 e2 =
+  let domCond = dom_expr cond in
+  let domExp1 = dom_expr e1 in
+  let domExp2 = dom_expr e2 in
+  let dom = dom_block "logic_ternary_typed" [] in
+  let dom = append_value dom "IF" domCond in
+  let dom = append_value dom "THEN" domExp1 in
+  let dom = append_value dom "THEN" domExp2 in
+  dom
 
 and dom_let_block rec_flag binding exp2 = match (rec_flag, binding, exp2) with
   | (Recursive, _, _) -> raise (NotImplemented "Letrec")
