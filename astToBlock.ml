@@ -89,7 +89,7 @@ and dom_expr expr = match expr.pexp_desc with
   | Pexp_let (rec_flag, [binding], expr) -> dom_let_block rec_flag binding expr
   | Pexp_let _ -> raise (NotImplemented "pexp_let")
   | Pexp_function _ -> raise (NotImplemented "function")
-  | Pexp_fun _ -> raise (NotImplemented "fun")
+  | Pexp_fun (label, def, pat, expr) -> dom_fun_block label def pat expr
   | Pexp_apply (exp1, []) -> assert false
   | Pexp_apply (exp1, exp2 :: rest) ->
     if List.exists (fun (label, _) -> label <> Nolabel) (exp2 :: rest) then
@@ -184,19 +184,37 @@ and dom_tuple_block e1 e2 =
   let dom = append_value dom "SECOND" domExp2 in
   dom
 
+and dom_pattern pat =
+  match pat.ppat_desc with
+  | Ppat_var var -> dom_var_field "VAR" true var.txt
+  | _ -> raise (NotImplemented "Unsupported pattern")
+
 and dom_let_block rec_flag binding exp2 = match (rec_flag, binding, exp2) with
   | (Recursive, _, _) -> raise (NotImplemented "Letrec")
   | (Nonrecursive, {pvb_pat=patt; pvb_expr=exp1},  _) ->
-    match patt.ppat_desc with
-      | Ppat_var var ->
-        let field = dom_var_field "VAR" true var.txt in
-        let domExp1 = dom_expr exp1 in
-        let domExp2 = dom_expr exp2 in
-        let dom = dom_block "let_typed" [field] in
-        let dom = append_value dom "EXP1" domExp1 in
-        let dom = append_value dom "EXP2" domExp2 in
-        dom
-      | _ -> raise (NotImplemented "pattern in let")
+     let field = dom_pattern patt in
+     let domExp1 = dom_expr exp1 in
+     let domExp2 = dom_expr exp2 in
+     let dom = dom_block "let_typed" [field] in
+     let dom = append_value dom "EXP1" domExp1 in
+     let dom = append_value dom "EXP2" domExp2 in
+     dom
+
+and dom_label label =
+  match label with
+  | Nolabel -> raise (NotImplemented "no label")
+  | Labelled l -> (dom_field "VAR" l)
+  | Optional l -> raise (NotImplemented "optional label")
+
+and dom_fun_block label def pat expr =
+  (* Note label and def are ignored *)
+  let domExpr = dom_expr expr in
+  let dom = dom_block "lambda_typed" [] in
+  let dom = Xml.appendChild dom (dom_pattern pat) in
+  let dom = append_value dom "RETURN" domExpr in
+  match def with
+  | Some _ -> raise (NotImplemented "fun def")
+  | None -> dom
 
 and dom_binary_op block_type op_type op_kind exp1 exp2 =
   let domExp1 = dom_expr exp1 in
