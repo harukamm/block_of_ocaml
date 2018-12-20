@@ -27,8 +27,9 @@ def status_name(status):
   else:
     return "unknown status"
 
-def push_result(code, status, output, error=None):
+def push_result(filename, code, status, output, error=None):
   result = {
+    "filename": filename,
     "code": code,
     "status": status,
     "output": output,
@@ -37,6 +38,7 @@ def push_result(code, status, output, error=None):
   results[status].append(result)
 
 def output_result(result):
+  print result['filename']
   print '> ' + result['code']
   status = result['status']
   if status == STATUS_SUCCESS:
@@ -73,11 +75,11 @@ def run_test(filename):
         stderr=subprocess.STDOUT)
     try:
       xml_root = ElementTree.fromstring(re)
-      push_result(code, STATUS_SUCCESS, xml_root)
+      push_result(filename, code, STATUS_SUCCESS, xml_root)
     except ElementTree.ParseError as e:
-      push_result(code, STATUS_ERROR_XML_PARSING, re, e)
+      push_result(filename, code, STATUS_ERROR_XML_PARSING, re, e)
   except subprocess.CalledProcessError as e:
-      push_result(code, STATUS_ERROR_XML_DECODING, None, e)
+      push_result(filename, code, STATUS_ERROR_XML_DECODING, None, e)
 
 def run_all_tests():
   test_files = [f for f in listdir(test_path) if isfile(join(test_path, f))]
