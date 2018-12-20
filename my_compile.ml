@@ -74,6 +74,6 @@ let implementation ppf sourcefile =
   let str = My_parse.parse_implementation ~tool_name ppf sourcefile in
   structure := str;
   let xml = AstToBlock.dom_struct_items !structure in
-  let xmlStr = Xml.print xml in print_endline xmlStr;
+  let xmlStr = Xml.print xml in
   xml_out := Some (xmlStr);
   xmlStr

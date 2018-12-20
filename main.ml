@@ -29,15 +29,14 @@ let show_config () =
 let block_of_ocaml code =
   try
     let xml_str = My_compile.implementation ppf code in
-    print_endline xml_str;
     (Some xml_str, None)
   with e ->
     (None, Some e)
 
 let main filename =
   try
-    let _ = My_compile.implementation ppf filename in
-    ()
+    let xml_str = My_compile.implementation ppf filename in
+    print_endline xml_str
   with x ->
     Location.report_exception ppf x;
     exit 2
