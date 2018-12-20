@@ -98,7 +98,12 @@ and dom_expr expr = match expr.pexp_desc with
       dom_app_lst_block exp1 (snd exp2) (List.map snd rest)
   | Pexp_match _ -> raise (NotImplemented "match")
   | Pexp_try _ -> raise (NotImplemented "try")
-  | Pexp_tuple _ -> raise (NotImplemented "tuple")
+  | Pexp_tuple (x :: y :: rest) ->
+    if List.length rest = 0 then
+      dom_tuple_block x y
+    else
+      raise (NotImplemented "n-tuple (n < 2)")
+  | Pexp_tuple _ -> assert false
   | Pexp_construct (ctr, opt) -> dom_construct (ctr, opt)
   | Pexp_variant _ -> raise (NotImplemented "variant")
   | Pexp_record _ -> raise (NotImplemented "Pexp_record")
@@ -169,6 +174,14 @@ and dom_ifthenelse_block cond e1 e2 =
   let dom = append_value dom "IF" domCond in
   let dom = append_value dom "THEN" domExp1 in
   let dom = append_value dom "THEN" domExp2 in
+  dom
+
+and dom_tuple_block e1 e2 =
+  let domExp1 = dom_expr e1 in
+  let domExp2 = dom_expr e2 in
+  let dom = dom_block "pair_create_typed" [] in
+  let dom = append_value dom "FIRST" domExp1 in
+  let dom = append_value dom "SECOND" domExp2 in
   dom
 
 and dom_let_block rec_flag binding exp2 = match (rec_flag, binding, exp2) with
