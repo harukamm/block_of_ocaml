@@ -59,7 +59,7 @@ let rec printAttrs attrs = match attrs with
   | x :: xs ->
     (printAttr x) ^ (if xs = [] then "" else " " ^ (printAttrs xs))
 
-let rec repeat_space n = if n <= 0 then "" else " " ^ (repeat_space (n - 1))
+let rec repeat_space n = "" (* if n <= 0 then "" else " " ^ (repeat_space (n - 1)) *)
 
 let rec print' depth xml =
   let ident = repeat_space depth in
