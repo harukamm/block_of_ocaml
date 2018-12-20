@@ -236,6 +236,9 @@ and dom_int_binary_op op exp1 exp2 =
 and dom_float_binary_op op exp1 exp2 =
   dom_binary_op "float_arithmetic_typed" "OP_FLOAT" (op ^ "_FLOAT") exp1 exp2
 
+and dom_cmp_binary_op op exp1 exp2 =
+  dom_binary_op "logic_compare_typed" "OP" op exp1 exp2
+
 and dom_maybe_binary_op exp1 exp_list =
   match exp_list with
   | exp_lhs :: [exp_rhs] -> (
@@ -250,6 +253,12 @@ and dom_maybe_binary_op exp1 exp_list =
       | Lident "-." -> Some (dom_float_binary_op "MINUS" exp_lhs exp_rhs)
       | Lident "*." -> Some (dom_float_binary_op "MULTIPLY" exp_lhs exp_rhs)
       | Lident "/." -> Some (dom_float_binary_op "DIVIDE" exp_lhs exp_rhs)
+      | Lident "=" -> Some (dom_cmp_binary_op "EQ" exp_lhs exp_rhs)
+      | Lident "!=" -> Some (dom_cmp_binary_op "NEQ" exp_lhs exp_rhs)
+      | Lident "<" -> Some (dom_cmp_binary_op "LT" exp_lhs exp_rhs)
+      | Lident "<=" -> Some (dom_cmp_binary_op "LTE" exp_lhs exp_rhs)
+      | Lident ">" -> Some (dom_cmp_binary_op "GT" exp_lhs exp_rhs)
+      | Lident ">=" -> Some (dom_cmp_binary_op "GTE" exp_lhs exp_rhs)
       | _ -> None
     )
     | _ -> None
