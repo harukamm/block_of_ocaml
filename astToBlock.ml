@@ -198,9 +198,47 @@ and dom_let_block rec_flag binding exp2 = match (rec_flag, binding, exp2) with
         dom
       | _ -> raise (NotImplemented "pattern in let")
 
+and dom_binary_op block_type op_type op_kind exp1 exp2 =
+  let domExp1 = dom_expr exp1 in
+  let domExp2 = dom_expr exp2 in
+  let dom = dom_block block_type [] in
+  let dom = Xml.appendChild dom (dom_field op_type op_kind) in
+  let dom = append_value dom "A" domExp1 in
+  let dom = append_value dom "B" domExp2 in
+  dom
+
+and dom_int_binary_op op exp1 exp2 =
+  dom_binary_op "int_arithmetic_typed" "OP_INT" (op ^ "_INT") exp1 exp2
+
+and dom_float_binary_op op exp1 exp2 =
+  dom_binary_op "float_arithmetic_typed" "OP_FLOAT" (op ^ "_FLOAT") exp1 exp2
+
+and dom_maybe_binary_op exp1 exp_list =
+  match exp_list with
+  | exp_lhs :: [exp_rhs] -> (
+    match exp1.pexp_desc with
+    | Pexp_ident loc -> (
+      match loc.txt with
+      | Lident "+" -> Some (dom_int_binary_op "ADD" exp_lhs exp_rhs)
+      | Lident "-" -> Some (dom_int_binary_op "MINUS" exp_lhs exp_rhs)
+      | Lident "*" -> Some (dom_int_binary_op "MULTIPLY" exp_lhs exp_rhs)
+      | Lident "/" -> Some (dom_int_binary_op "DIVIDE" exp_lhs exp_rhs)
+      | Lident "+." -> Some (dom_float_binary_op "ADD" exp_lhs exp_rhs)
+      | Lident "-." -> Some (dom_float_binary_op "MINUS" exp_lhs exp_rhs)
+      | Lident "*." -> Some (dom_float_binary_op "MULTIPLY" exp_lhs exp_rhs)
+      | Lident "/." -> Some (dom_float_binary_op "DIVIDE" exp_lhs exp_rhs)
+      | _ -> None
+    )
+    | _ -> None
+  )
+  | _ -> None
+
 and dom_app_lst_block exp1 exp2 exp2_rest =
-  let left = dom_app_block exp1 exp2 in
-  List.fold_left (fun dom exp -> dom_app_block' dom (dom_expr exp)) left exp2_rest
+  match dom_maybe_binary_op exp1 (exp2 :: exp2_rest) with
+  | Some dom -> dom
+  | None ->
+     let left = dom_app_block exp1 exp2 in
+     List.fold_left (fun dom exp -> dom_app_block' dom (dom_expr exp)) left exp2_rest
 
 and dom_app_block' dom_exp1 dom_exp2 =
   let dom = dom_block "lambda_app_typed" [] in
