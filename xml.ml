@@ -69,13 +69,13 @@ let rec print' depth xml =
     let childStr =
       childNodes
       |> List.map (print' (depth + 1))
-      |> List.fold_left (fun str x -> str ^ "\n" ^ x) ""
+      |> List.fold_left (fun str x -> str ^ x) ""
     in
     if attrs = [] then
-      ident ^ "<" ^ tagName ^ ">" ^ childStr ^ "\n" ^
+      ident ^ "<" ^ tagName ^ ">" ^ childStr ^
       ident ^ "</" ^ tagName ^ ">"
     else
-      ident ^ "<" ^ tagName ^ " " ^ attrStr ^ ">" ^ childStr ^ "\n" ^
+      ident ^ "<" ^ tagName ^ " " ^ attrStr ^ ">" ^ childStr ^
       ident ^ "</" ^ tagName ^ ">"
   | Text (text) ->
     ident ^ (escape_string text)
