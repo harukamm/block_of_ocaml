@@ -40,9 +40,9 @@ let converter_for_js input =
     | (None, None) ->
       Js.string "nande~~"
     | (_, Some (AstToBlock.NotImplemented(ctr))) ->
-      Js.string ("notImplementedAST" ^ ctr)
+      Js.string ("not supported: " ^ ctr)
     | (_, Some e) ->
-      Js.string "unknown_error"
+      Js.string "parsing failed"
 
 let get_xml_out () =
   match !My_compile.xml_out with
