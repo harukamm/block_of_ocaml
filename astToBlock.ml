@@ -173,7 +173,7 @@ and dom_ifthenelse_block cond e1 e2 =
   let dom = dom_block "logic_ternary_typed" [] in
   let dom = append_value dom "IF" domCond in
   let dom = append_value dom "THEN" domExp1 in
-  let dom = append_value dom "THEN" domExp2 in
+  let dom = append_value dom "ELSE" domExp2 in
   dom
 
 and dom_tuple_block e1 e2 =
