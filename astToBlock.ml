@@ -189,13 +189,18 @@ and dom_pattern pat =
   | Ppat_var var -> dom_var_field "VAR" true var.txt
   | _ -> raise (NotImplemented "Unsupported pattern")
 
-and dom_let_block rec_flag binding exp2 = match (rec_flag, binding, exp2) with
-  | (Recursive, _, _) -> raise (NotImplemented "Letrec")
-  | (Nonrecursive, {pvb_pat=patt; pvb_expr=exp1},  _) ->
+and dom_let_block rec_flag binding exp2 =
+  let is_rec = match rec_flag with
+    | Recursive -> true
+    | Nonrecursive -> false in
+  match (binding, exp2) with
+  | ({pvb_pat=patt; pvb_expr=exp1},  _) ->
      let field = dom_pattern patt in
      let domExp1 = dom_expr exp1 in
      let domExp2 = dom_expr exp2 in
      let dom = dom_block "let_typed" [field] in
+     let dom = Xml.setAttribute dom ("rec",
+                                     if is_rec then "true" else "false") in
      let dom = append_value dom "EXP1" domExp1 in
      let dom = append_value dom "EXP2" domExp2 in
      dom
