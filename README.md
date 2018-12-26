@@ -17,6 +17,8 @@ $ python test.py
 
 ## Compiling to JavaScript
 
+You might need to run js_of_ocaml with options such as +weak.js, +toplevel.js, and +dynlink.js to provide missing primitives.
+
 ```bash
 $ make bcl
 $ make -C web
