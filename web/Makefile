@@ -4,7 +4,7 @@ LIBS = block_of_ocaml
 RESULT = converter
 PACKS = js_of_ocaml js_of_ocaml.syntax compiler-libs.common compiler-libs.bytecomp
 PREDS = camlp4o
-OCAMLMAKEFILE = ~/include/JsOfOcamlMakefile
+OCAMLMAKEFILE = ../OCamlMakefile
 include $(OCAMLMAKEFILE)
 
 $(RESULT).js : $(RESULT)
