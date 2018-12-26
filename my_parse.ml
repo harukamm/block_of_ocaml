@@ -38,8 +38,7 @@ let preprocess sourcefile =
   match !Clflags.preprocessor with
     None -> sourcefile
   | Some pp ->
-      Timings.(time (Preprocessing sourcefile))
-        (call_external_preprocessor sourcefile) pp
+      (call_external_preprocessor sourcefile) pp
 
 
 let remove_preprocessed inputfile =
@@ -210,11 +209,11 @@ let parse_all ~tool_name parse_fun invariant_fun magic ppf code =
 
 let parse_implementation ppf ~tool_name code =
   parse_all ~tool_name
-    (Timings.(time (Parsing code)) Parse.implementation)
+    Parse.implementation
     Ast_invariants.structure
     Config.ast_impl_magic_number ppf code
 let parse_interface ppf ~tool_name sourcefile =
   parse_all ~tool_name
-    (Timings.(time (Parsing sourcefile)) Parse.interface)
+    Parse.interface
     Ast_invariants.signature
     Config.ast_intf_magic_number ppf sourcefile
