@@ -73,11 +73,5 @@ let () = ignore begin
 end
 *)
 
-let run_main input =
-  let filename = Js.to_string input in
-  Main.main filename
-
 let () =
   Js.Unsafe.global##blockOfOCaml <- converter_for_js;;
-  Js.Unsafe.global##runMain <- run_main
-;;
