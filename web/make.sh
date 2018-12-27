@@ -12,10 +12,5 @@ if [ "$1" = "clean" ]; then
   fi
 else
   make -C .. bcl;
-  make;
-  if [ ! -e converter.js ]; then
-    command="js_of_ocaml +weak.js +toplevel.js +dynlink.js converter";
-    echo $command;
-    `$command`;
-  fi
+  make
 fi
