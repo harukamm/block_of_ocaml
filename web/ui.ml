@@ -44,11 +44,6 @@ let converter_for_js input =
     | (_, Some e) ->
       Js.string "parsing failed"
 
-let get_xml_out () =
-  match !My_compile.xml_out with
-    | None -> Js.string "nande~~><"
-    | Some str -> Js.string str
-
 let on_click_OK input_textarea output_textarea _ =
   let input = input_textarea##value in
   let output = converter_for_js input in
@@ -84,6 +79,5 @@ let run_main input =
 
 let () =
   Js.Unsafe.global##blockOfOCaml <- converter_for_js;;
-  Js.Unsafe.global##getXmlOut <- get_xml_out;;
   Js.Unsafe.global##runMain <- run_main
 ;;
