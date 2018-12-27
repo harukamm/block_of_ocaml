@@ -22,7 +22,6 @@ You might need to run js_of_ocaml with options such as +weak.js, +toplevel.js, a
 ```bash
 $ make bcl
 $ make -C web
-$ js_of_ocaml web/converter
 ```
 
 Function named ```blockOfOCaml``` is exposed to JavaScript.
