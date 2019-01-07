@@ -86,7 +86,7 @@ and dom_patt patt = match patt with
 (* The type of expressions *)
 and dom_expr expr = match expr.pexp_desc with
   | Pexp_ident loc -> dom_ident loc.txt
-  | Pexp_let (rec_flag, [binding], expr) -> dom_let_block rec_flag binding expr
+  | Pexp_let (rec_flag, [binding], expr) -> dom_let_block rec_flag binding (Some expr)
   | Pexp_let _ -> raise (NotImplemented "pexp_let")
   | Pexp_function _ -> raise (NotImplemented "function")
   | Pexp_fun (label, def, pat, expr) -> dom_fun_block label def pat expr
@@ -137,7 +137,8 @@ and dom_expr expr = match expr.pexp_desc with
 (* The type of structure items *)
 and dom_struct_item item = match item.pstr_desc with
   | Pstr_eval (expression, _) -> dom_expr expression
-  | Pstr_value (rec_flag, bindings) -> raise (NotImplemented "let without in")
+  | Pstr_value (rec_flag, [binding]) -> dom_let_block rec_flag binding None
+  | Pstr_value _ -> raise (NotImplemented "Pstr_value")
   | Pstr_primitive (value_description) -> raise (NotImplemented "Pstr_primitive")
   | Pstr_type (rec_flag, type_declarations) -> raise (NotImplemented "Pstr_type")
   | Pstr_typext (type_extension) -> raise (NotImplemented "Pstr_typext")
@@ -154,7 +155,13 @@ and dom_struct_item item = match item.pstr_desc with
 
 and dom_struct_items = function
   | [] -> Xml.createNilDom()
-  | x :: xs -> dom_struct_item x
+  | x :: xs ->
+    let dom = dom_struct_item x in
+    if xs = []
+    then dom
+    else
+      let children = dom_struct_items xs in
+      append_next dom children
 
 and dom_int_block n = dom_block "int_typed" [dom_field "INT" (string_of_int n)]
 
@@ -189,20 +196,28 @@ and dom_pattern pat =
   | Ppat_var var -> dom_var_field "VAR" true var.txt
   | _ -> raise (NotImplemented "Unsupported pattern")
 
-and dom_let_block rec_flag binding exp2 =
+and dom_let_block rec_flag binding opt_exp2 =
   let is_rec = match rec_flag with
     | Recursive -> true
     | Nonrecursive -> false in
-  match (binding, exp2) with
-  | ({pvb_pat=patt; pvb_expr=exp1},  _) ->
+  let is_statement = opt_exp2 = None in
+  match (binding, opt_exp2) with
+  | ({pvb_pat=patt; pvb_expr=exp1}, _) ->
      let field = dom_pattern patt in
      let domExp1 = dom_expr exp1 in
-     let domExp2 = dom_expr exp2 in
      let dom = dom_block "let_typed" [field] in
      let dom = Xml.setAttribute dom ("rec",
                                      if is_rec then "true" else "false") in
+     let dom = Xml.setAttribute dom ("statement",
+                                     if is_statement then "true" else "false") in
      let dom = append_value dom "EXP1" domExp1 in
-     let dom = append_value dom "EXP2" domExp2 in
+     let dom =
+       match opt_exp2 with
+         | None -> dom
+         | Some exp2 ->
+           let domExp2 = dom_expr exp2 in
+           append_value dom "EXP2" domExp2
+     in
      dom
 
 and dom_label label =
@@ -301,8 +316,14 @@ and dom_block typeName children =
 and dom_block_value name child =
   Xml.createDom "value" [("name", name)] [child]
 
+and dom_next_block child =
+  Xml.createDom "next" [] [child]
+
 and append_value xml name child =
   Xml.appendChild xml (dom_block_value name child)
+
+and append_next xml child =
+  Xml.appendChild xml (dom_next_block child)
 
 and dom_field name text =
   Xml.createDom "field" [("name", name)] [Xml.createTextDom text]
