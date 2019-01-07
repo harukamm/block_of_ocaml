@@ -9,6 +9,8 @@ let pp = Format.fprintf
 (* https://caml.inria.fr/pub/docs/manual-ocaml/libref/Asttypes.html#TYPErec_flag *)
 (* Reference: https://github.com/davidlazar/xml_of_ocaml *)
 
+type arg_t = Argument of Asttypes.arg_label * Parsetree.expression option * Parsetree.pattern
+
 (* miscellaneous printers *)
 let dom_rec_flag = function
   | Nonrecursive -> raise (NotImplemented "Nonrecursive")
@@ -163,6 +165,13 @@ and dom_struct_items = function
       let children = dom_struct_items xs in
       append_next dom children
 
+and flatten_arguments exp = match exp.pexp_desc with
+  | Pexp_fun (label, def, pat, exp') ->
+    let arg = Argument (label, def, pat) in
+    let (args, rest) = flatten_arguments exp' in
+    (arg :: args, rest)
+  | _ -> ([], exp)
+
 and dom_int_block n = dom_block "int_typed" [dom_field "INT" (string_of_int n)]
 
 and dom_float_block n = dom_block "float_typed" [dom_field "Float" (string_of_float n)]
@@ -204,12 +213,14 @@ and dom_let_block rec_flag binding opt_exp2 =
   match (binding, opt_exp2) with
   | ({pvb_pat=patt; pvb_expr=exp1}, _) ->
      let field = dom_pattern patt in
-     let domExp1 = dom_expr exp1 in
-     let dom = dom_block "let_typed" [field] in
+     let (args, exp1) = flatten_arguments exp1 in
+     let (mutation, arg_fields) = dom_arguments args in
+     let dom = dom_block "let_typed" (mutation :: field :: arg_fields) in
      let dom = Xml.setAttribute dom ("rec",
                                      if is_rec then "true" else "false") in
      let dom = Xml.setAttribute dom ("statement",
                                      if is_statement then "true" else "false") in
+     let domExp1 = dom_expr exp1 in
      let dom = append_value dom "EXP1" domExp1 in
      let dom =
        match opt_exp2 with
@@ -219,6 +230,20 @@ and dom_let_block rec_flag binding opt_exp2 =
            append_value dom "EXP2" domExp2
      in
      dom
+
+and dom_arguments args =
+  let names = List.map (function
+      | Argument(_, _, {ppat_desc=Ppat_var var}) -> var.txt
+      | _ -> raise (NotImplemented "Unsupported pattern")) args in
+  let mutation = arguments_mutation names in
+  let rec h i names = match names with
+    | [] -> []
+    | x :: xs ->
+      let field = dom_var_field ("ARG" ^ (string_of_int i)) true x in
+      field :: (h (i + 1) xs)
+  in
+  let arg_fields = h 0 names in
+  (mutation, arg_fields)
 
 and dom_label label =
   match label with
@@ -317,6 +342,11 @@ and dom_app_block expr1 expr2 =
 
 and params_mutation n =
   Xml.createDom "mutation" [("params", string_of_int n)] []
+
+and arguments_mutation names =
+  let children = List.map (fun name ->
+      Xml.createDom "item" [] [Xml.createTextDom name]) names in
+  Xml.createDom "mutation" [] children
 
 and dom_list_block exprs =
   let rec h dom es = match es with
