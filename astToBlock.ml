@@ -284,8 +284,25 @@ and dom_app_lst_block exp1 exp2 exp2_rest =
   match dom_maybe_binary_op exp1 (exp2 :: exp2_rest) with
   | Some dom -> dom
   | None ->
+    match exp1.pexp_desc with
+    | Pexp_ident ({txt=Lident name}) ->
+     dom_varapp_lst_block name (exp2 :: exp2_rest)
+    | _ ->
      let left = dom_app_block exp1 exp2 in
      List.fold_left (fun dom exp -> dom_app_block' dom (dom_expr exp)) left exp2_rest
+
+and dom_varapp_lst_block id lst =
+  let field = dom_var_field "VAR" false id in
+  let mutation = params_mutation (List.length lst) in
+  let dom = dom_block "function_app_typed" [field; mutation] in
+  let rec h dom' i exprs = match exprs with
+    | [] -> dom'
+    | exp :: rest ->
+      let name = "PARAM" ^ (string_of_int i) in
+      let dom'' = append_value dom' name (dom_expr exp) in
+      h dom'' (i + 1) rest
+  in
+  h dom 0 lst
 
 and dom_app_block' dom_exp1 dom_exp2 =
   let dom = dom_block "lambda_app_typed" [] in
@@ -297,6 +314,9 @@ and dom_app_block expr1 expr2 =
   let domExp1 = dom_expr expr1 in
   let domExp2 = dom_expr expr2 in
   dom_app_block' domExp1 domExp2
+
+and params_mutation n =
+  Xml.createDom "mutation" [("params", string_of_int n)] []
 
 and dom_list_block exprs =
   let rec h dom es = match es with
