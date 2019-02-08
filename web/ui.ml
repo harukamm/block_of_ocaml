@@ -38,11 +38,11 @@ let converter_for_js input =
     | (Some str, None) ->
       Js.string str
     | (None, None) ->
-      Js.string "unknown error"
+      Js.string "__error__unknown"
     | (_, Some (AstToBlock.NotImplemented(ctr))) ->
-      Js.string ("not supported: " ^ ctr)
+      Js.string ("__error__not_supported_" ^ ctr)
     | (_, Some e) ->
-      Js.string "parsing failed"
+      Js.string ("__error__parsing")
 
 let on_click_OK input_textarea output_textarea _ =
   let input = input_textarea##value in
