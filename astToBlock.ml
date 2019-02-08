@@ -322,7 +322,15 @@ and dom_app_lst_block exp1 exp2 exp2_rest =
   | None ->
     match exp1.pexp_desc with
     | Pexp_ident ({txt=Lident name}) ->
-     dom_varapp_lst_block name (exp2 :: exp2_rest)
+      begin
+        if exp2_rest = [] then
+          if name = "fst" then dom_builtint_fst_app exp2
+          else if name = "snd" then dom_builtint_snd_app exp2
+          else if name = "string_of_int" then dom_builtint_string_of_int_app exp2
+          else dom_varapp_lst_block name [exp2]
+        else
+          dom_varapp_lst_block name (exp2 :: exp2_rest)
+      end
     | _ ->
      let left = dom_app_block exp1 exp2 in
      List.fold_left (fun dom exp -> dom_app_block' dom (dom_expr exp)) left exp2_rest
@@ -370,6 +378,21 @@ and dom_list_block exprs =
   in
   let dom = dom_block "lists_create_with_typed" [] in
   h dom exprs
+
+and dom_builtint_fst_app exp =
+  let domExp = dom_expr exp in
+  let value = dom_block_value "FIRST" domExp in
+  dom_block "pair_first_typed" [value]
+
+and dom_builtint_snd_app exp =
+  let domExp = dom_expr exp in
+  let value = dom_block_value "SECOND" domExp in
+  dom_block "pair_second_typed" [value]
+
+and dom_builtint_string_of_int_app exp =
+  let domExp = dom_expr exp in
+  let value = dom_block_value "PARAM" domExp in
+  dom_block "string_of_int_typed" [value]
 
 and dom_block typeName children =
   Xml.createDom "block" [("type", typeName)] children
