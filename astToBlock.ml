@@ -74,7 +74,7 @@ and dom_constant = function
     let msg = "float: " ^ float_literal in
     raise (NotImplemented msg)
   | Pconst_char c -> raise (NotImplemented "char literal")
-  | Pconst_string _ -> raise (NotImplemented "string literal")
+  | Pconst_string (str, _) -> dom_string_block str
 
 (* The type of patterns *)
 and dom_patt patt = match patt with
@@ -175,6 +175,8 @@ and flatten_arguments exp = match exp.pexp_desc with
 and dom_int_block n = dom_block "int_typed" [dom_field "INT" (string_of_int n)]
 
 and dom_float_block n = dom_block "float_typed" [dom_field "Float" (string_of_float n)]
+
+and dom_string_block str = dom_block "string_typed" [dom_field "STRING" str]
 
 and dom_id_block id = dom_block "variables_get_typed" [dom_var_field "VAR" false id]
 
@@ -279,6 +281,14 @@ and dom_float_binary_op op exp1 exp2 =
 and dom_cmp_binary_op op exp1 exp2 =
   dom_binary_op "logic_compare_typed" "OP" op exp1 exp2
 
+and dom_string_concat exp1 exp2 =
+  let domExp1 = dom_expr exp1 in
+  let domExp2 = dom_expr exp2 in
+  let dom = dom_block "concat_string_typed" [] in
+  let dom = append_value dom "A" domExp1 in
+  let dom = append_value dom "B" domExp2 in
+  dom
+
 and dom_maybe_binary_op exp1 exp_list =
   match exp_list with
   | exp_lhs :: [exp_rhs] -> (
@@ -299,6 +309,7 @@ and dom_maybe_binary_op exp1 exp_list =
       | Lident "<=" -> Some (dom_cmp_binary_op "LTE" exp_lhs exp_rhs)
       | Lident ">" -> Some (dom_cmp_binary_op "GT" exp_lhs exp_rhs)
       | Lident ">=" -> Some (dom_cmp_binary_op "GTE" exp_lhs exp_rhs)
+      | Lident "^" -> Some (dom_string_concat exp_lhs exp_rhs)
       | _ -> None
     )
     | _ -> None
