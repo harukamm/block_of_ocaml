@@ -38,7 +38,7 @@ let converter_for_js input =
     | (Some str, None) ->
       Js.string str
     | (None, None) ->
-      Js.string "nande~~"
+      Js.string "unknown error"
     | (_, Some (AstToBlock.NotImplemented(ctr))) ->
       Js.string ("not supported: " ^ ctr)
     | (_, Some e) ->
