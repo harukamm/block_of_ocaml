@@ -12,6 +12,11 @@ type arg_t =
   | Argument of Asttypes.arg_label *
       Parsetree.expression option * Parsetree.pattern
 
+type variable_label =
+  | Variable
+  | Constructor
+  | Record
+
 (* miscellaneous printers *)
 let dom_rec_flag = function
   | Nonrecursive -> raise (NotImplemented "Nonrecursive")
@@ -413,6 +418,15 @@ and append_next xml child =
 and dom_field name text =
   Xml.createDom "field" [("name", name)] [Xml.createTextDom text]
 
-and dom_var_field name isValue text =
+and dom_var_field name is_value ?(var_type=Variable) text =
   let field = dom_field name text in
-  Xml.setAttribute field ("isvalue", if isValue then "true" else "false")
+  let is_value = if is_value then "true" else "false" in
+  let field = Xml.setAttribute field ("isvalue", is_value) in
+  Xml.setAttribute field ("variable-type", label_to_name var_type)
+
+(* Note: Keep consistency with label names defined in OCaml Blockly. *)
+(* See https://github.com/harukamm/ocaml-blockly/blob/master/core/bound_variable_abstract.js. *)
+and label_to_name : variable_label -> string = function
+  | Variable -> "variable"
+  | Constructor -> "constructor"
+  | Record -> "record"
