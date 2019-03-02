@@ -8,6 +8,6 @@ OCAMLMAKEFILE = ../OCamlMakefile
 OCAMLFLAGS = -syntax camlp4o
 
 $(RESULT).js: byte-code
-	js_of_ocaml +weak.js +toplevel.js +dynlink.js $(RESULT)
+	js_of_ocaml +toplevel.js $(RESULT)
 
 include $(OCAMLMAKEFILE)
