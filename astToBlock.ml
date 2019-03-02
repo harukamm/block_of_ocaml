@@ -9,7 +9,9 @@ let pp = Format.fprintf
 (* https://caml.inria.fr/pub/docs/manual-ocaml/libref/Asttypes.html#TYPErec_flag *)
 (* Reference: https://github.com/davidlazar/xml_of_ocaml *)
 
-type arg_t = Argument of Asttypes.arg_label * Parsetree.expression option * Parsetree.pattern
+type arg_t =
+  | Argument of Asttypes.arg_label *
+      Parsetree.expression option * Parsetree.pattern
 
 (* miscellaneous printers *)
 let dom_rec_flag = function
