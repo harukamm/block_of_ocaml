@@ -245,14 +245,20 @@ and dom_constructor_declaration name manifest lst =
         raise (NotImplemented "Constructor declaration with attributes");
       if ctor.pcd_res <> None then
         raise (NotImplemented "pcd_res");
-      let arg_xml = dom_constructor_argument ctor.pcd_args ctor.pcd_loc in
+      let opt_arg_xml = dom_constructor_argument ctor.pcd_args ctor.pcd_loc in
       let i_str = string_of_int i in
       let ctor_name = ctor.pcd_name.txt in
       let field = dom_var_field ("CTR" ^ i_str) true
         ~var_type:Constructor ctor_name in
-      let value = dom_block_value ("CTR_INP" ^ i_str) arg_xml in
       let (fields, values) = create_ctors_xml rest (i + 1) in
-      (field :: fields, value :: values)
+      let values' =
+        match opt_arg_xml with
+        | None -> values
+        | Some (arg_xml) ->
+          let value = dom_block_value ("CTR_INP" ^ i_str) arg_xml in
+          value :: values
+      in
+      (field :: fields, values')
   in
   let (fields, values) = create_ctors_xml lst 0 in
   let ctors_xml = fields @ values in
@@ -263,13 +269,15 @@ and dom_constructor_argument arg dummy_loc =
   match arg with
   | Pcstr_tuple types ->
     let size = List.length types in
-    if size = 1 then
-      dom_core_type (List.hd types)
+    if size = 0 then
+      None
+    else if size = 1 then
+      Some (dom_core_type (List.hd types))
     else if size = 2 || size = 3 then
       (* Create core_type indicating tuples. *)
       let dummy_tuple = {ptyp_desc=Ptyp_tuple (types);
         ptyp_attributes=[]; ptyp_loc=dummy_loc} in
-      dom_core_type dummy_tuple
+      Some (dom_core_type dummy_tuple)
     else raise (NotImplemented ("Constructor declaration with more " ^
       "than 4 tuples"))
   | Pcstr_record label_declarations ->
