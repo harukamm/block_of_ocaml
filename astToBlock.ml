@@ -148,7 +148,12 @@ and dom_struct_item item = match item.pstr_desc with
   | Pstr_value (rec_flag, [binding]) -> dom_let_block rec_flag binding None
   | Pstr_value _ -> raise (NotImplemented "Pstr_value")
   | Pstr_primitive (value_description) -> raise (NotImplemented "Pstr_primitive")
-  | Pstr_type (rec_flag, type_declarations) -> raise (NotImplemented "Pstr_type")
+  | Pstr_type (rec_flag, type_declarations) ->
+    if List.length type_declarations = 1 then
+      let first = List.nth type_declarations 0 in
+      dom_type_declaration first
+    else
+      raise (NotImplemented "Mutually recursive types")
   | Pstr_typext (type_extension) -> raise (NotImplemented "Pstr_typext")
   | Pstr_exception (extension_constructor) -> raise (NotImplemented "exception")
   | Pstr_module (module_binding) -> raise (NotImplemented "Pstr_module")
@@ -207,6 +212,119 @@ and dom_tuple_block e1 e2 =
   let dom = append_value dom "FIRST" domExp1 in
   let dom = append_value dom "SECOND" domExp2 in
   dom
+
+and dom_type_declaration type_declaration =
+  let dataname = type_declaration.ptype_name.txt in
+  if List.length type_declaration.ptype_params <> 0 then
+    raise (NotImplemented "Type declaration with parameters");
+  if List.length type_declaration.ptype_cstrs <> 0 then
+    raise (NotImplemented "constraint");
+  if type_declaration.ptype_private = Private then
+    raise (NotImplemented "Private type declaration");
+  if List.length type_declaration.ptype_attributes <> 0 then
+    raise (NotImplemented "Type declaration with attributes");
+  let manifest = type_declaration.ptype_manifest in
+  match type_declaration.ptype_kind with
+  | Ptype_abstract -> raise (NotImplemented "Abstract type declaration")
+  | Ptype_variant lst -> dom_constructor_declaration dataname manifest lst
+  | Ptype_record lst -> dom_record_declaration dataname manifest lst
+  | Ptype_open -> raise (NotImplemented "open")
+
+and dom_constructor_declaration name manifest lst =
+  if manifest <> None then
+    raise (NotImplemented "Constructor declaration with manifest");
+  assert (List.length lst <> 0);
+  let mutation = items_mutation (List.length lst) in
+  let dataname_xml = dom_field "DATANAME" name in
+  let rec create_ctors_xml lst_ i =
+    match lst_ with
+    | [] -> ([], [])
+    | ctor :: rest ->
+      if List.length ctor.pcd_attributes != 0 then
+        raise (NotImplemented "Constructor declaration with attributes");
+      if ctor.pcd_res <> None then
+        raise (NotImplemented "pcd_res");
+      let arg_xml = dom_constructor_argument ctor.pcd_args ctor.pcd_loc in
+      let i_str = string_of_int i in
+      let ctor_name = ctor.pcd_name.txt in
+      let field = dom_var_field ("CTR" ^ i_str) true
+        ~var_type:Constructor ctor_name in
+      let value = dom_block_value ("CTR_INP" ^ i_str) arg_xml in
+      let (fields, values) = create_ctors_xml rest (i + 1) in
+      (field :: fields, value :: values)
+  in
+  let (fields, values) = create_ctors_xml lst 0 in
+  let ctors_xml = fields @ values in
+  let children = mutation :: dataname_xml :: ctors_xml in
+  dom_block "defined_datatype_typed" children
+
+and dom_constructor_argument arg dummy_loc =
+  match arg with
+  | Pcstr_tuple types ->
+    let size = List.length types in
+    if size = 1 then
+      dom_core_type (List.hd types)
+    else if size = 2 || size = 3 then
+      (* Create core_type indicating tuples. *)
+      let dummy_tuple = {ptyp_desc=Ptyp_tuple (types);
+        ptyp_attributes=[]; ptyp_loc=dummy_loc} in
+      dom_core_type dummy_tuple
+    else raise (NotImplemented ("Constructor declaration with more " ^
+      "than 4 tuples"))
+  | Pcstr_record _ ->
+    raise (NotImplemented "Constructor declaration with records")
+
+and dom_record_declaration name manifest lst =
+  if manifest <> None then
+    raise (NotImplemented "Record declaration with manifest");
+  assert (List.length lst <> 0);
+  raise (NotImplemented "Record declaration");
+
+and dom_core_type core_type =
+  if List.length core_type.ptyp_attributes <> 0 then
+    raise (NotImplemented "Types with attributes");
+  match core_type.ptyp_desc with
+  | Ptyp_any -> raise (NotImplemented "Any types")
+  | Ptyp_var str -> raise (NotImplemented "Type variables")
+  | Ptyp_arrow (label, typ1, typ2) -> raise (NotImplemented "Arrow types")
+  | Ptyp_tuple lst ->
+    let size = List.length lst in
+    assert (1 < size);
+    if 3 < size then
+      raise (NotImplemented ("Tuple types with more than 3 arugments"))
+    else if size = 2 then
+      let xmls = List.map dom_core_type lst in
+      let left = dom_block_value "LEFT" (List.nth xmls 0) in
+      let right = dom_block_value "RIGHT" (List.nth xmls 1) in
+      let values = [left; right] in
+      dom_block "pair_type_constructor_typed" values
+    else
+      let xmls = List.map dom_core_type lst in
+      let item0 = dom_block_value "ITEM0" (List.nth xmls 0) in
+      let item1 = dom_block_value "ITEM1" (List.nth xmls 1) in
+      let item2 = dom_block_value "ITEM2" (List.nth xmls 2) in
+      let values = [item0; item1; item2] in
+      dom_block "triple_type_constructor_typed" values
+  | Ptyp_constr (loc, types) ->
+    begin
+      let ident = loc.txt in
+      match ident with
+      | Lident id ->
+        let supported = ["int"; "float"; "bool"; "string"] in
+        if not (List.mem id supported) then
+          raise (NotImplemented ("Type construction " ^ id));
+        let name = id ^ "_type_typed" in
+        dom_block name []
+      | Ldot _ -> raise (NotImplemented ("Type construction Ldot"))
+      | Lapply _ -> raise (NotImplemented ("Type construction Lapply"))
+    end
+  | Ptyp_object (obj_fields, flag) -> raise (NotImplemented "Object types")
+  | Ptyp_class (loc, typs) -> raise (NotImplemented "Class types")
+  | Ptyp_alias (typ, str) -> raise (NotImplemented "Alias types")
+  | Ptyp_variant (fields, flag, opt_label) -> raise (NotImplemented "Variant types")
+  | Ptyp_poly (locs, typ) -> raise (NotImplemented "Poly types")
+  | Ptyp_package pkg -> raise (NotImplemented "Package types")
+  | Ptyp_extension xtn -> raise (NotImplemented "Extension types")
 
 and dom_pattern pat =
   match pat.ppat_desc with
@@ -367,6 +485,9 @@ and dom_app_block expr1 expr2 =
 
 and params_mutation n =
   Xml.createDom "mutation" [("params", string_of_int n)] []
+
+and items_mutation n =
+  Xml.createDom "mutation" [("items", string_of_int n)] []
 
 and arguments_mutation names =
   let children = List.map (fun name ->
