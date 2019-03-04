@@ -19,13 +19,13 @@ STATUS_ERROR_XML_DECODING = 2
 
 def status_name(status):
   if status == STATUS_SUCCESS:
-    return "success"
+    return "SUCCESS"
   elif status == STATUS_ERROR_XML_PARSING:
-    return "xml-paring-error"
+    return "failed: xml-paring-error"
   elif status == STATUS_ERROR_XML_DECODING:
-    return "xml-decoding-error"
+    return "failed: xml-decoding-error"
   else:
-    return "unknown status"
+    assert False
 
 def push_result(filename, code, status, output, error=None):
   result = {
@@ -58,11 +58,21 @@ def output_result(result):
     print error.output
 
 def output_all_results():
+  num_of_test = 0
+  success = 0
   for status in xrange(len(results)):
+    items = results[status]
+    if len(items) == 0:
+      continue
     print status_name(status)
-    for re in results[status]:
+    for re in items:
       output_result(re)
+      num_of_test += 1
+      if re['status'] == STATUS_SUCCESS:
+        success += 1
     print ''
+  print 'success: ' + str(success) + ' tests'
+  print 'failed: ' + str(num_of_test - success) + ' tests'
 
 def run_test(filename):
   source = test_path + '/' + filename
