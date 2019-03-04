@@ -16,6 +16,7 @@ type variable_label =
   | Variable
   | Constructor
   | Record
+  | Record_field
 
 (* miscellaneous printers *)
 let dom_rec_flag = function
@@ -271,14 +272,36 @@ and dom_constructor_argument arg dummy_loc =
       dom_core_type dummy_tuple
     else raise (NotImplemented ("Constructor declaration with more " ^
       "than 4 tuples"))
-  | Pcstr_record _ ->
+  | Pcstr_record label_declarations ->
     raise (NotImplemented "Constructor declaration with records")
 
 and dom_record_declaration name manifest lst =
   if manifest <> None then
     raise (NotImplemented "Record declaration with manifest");
   assert (List.length lst <> 0);
-  raise (NotImplemented "Record declaration");
+  let mutation = items_mutation (List.length lst) in
+  let dataname_field = dom_var_field "DATANAME" true
+    ~var_type:Record name in
+  let rec create_labels_xml lst_ i =
+    match lst_ with
+    | [] -> ([], [])
+    | l :: rest ->
+      if List.length l.pld_attributes != 0 then
+        raise (NotImplemented "Record field declaration with attributes");
+      if l.pld_mutable = Mutable then
+        raise (NotImplemented "Mutable record field");
+      let type_xml = dom_core_type l.pld_type in
+      let i_str = string_of_int i in
+      let label_name = l.pld_name.txt in
+      let field = dom_var_field ("FIELD" ^ i_str) true
+        ~var_type:Record_field label_name in
+      let value = dom_block_value ("FIELD_INP" ^ i_str) type_xml in
+      let (fields, values) = create_labels_xml rest (i + 1) in
+      (field :: fields, value :: values)
+  in
+  let (fields, values) = create_labels_xml lst 0 in
+  let children = mutation :: dataname_field :: (fields @ values) in
+  dom_block "defined_recordtype_typed" children
 
 and dom_core_type core_type =
   if List.length core_type.ptyp_attributes <> 0 then
@@ -551,3 +574,4 @@ and label_to_name : variable_label -> string = function
   | Variable -> "variable"
   | Constructor -> "constructor"
   | Record -> "record"
+  | Record_field -> "record-field"
