@@ -63,8 +63,6 @@ and dom_construct = function
       dom_list_block []
     else
       raise (NotImplemented ("constructor: " ^ ctr_name))
-  | ({txt=Lident ("::")}, Some {pexp_desc=Pexp_tuple lst}) -> dom_list_block lst
-  | ({txt=Lident ("::")}, _) -> assert false
   | _ -> raise (NotImplemented "constructor")
 
 and dom_constant = function
@@ -113,7 +111,10 @@ and dom_expr expr = match expr.pexp_desc with
     else
       raise (NotImplemented "n-tuple (n < 2)")
   | Pexp_tuple _ -> assert false
-  | Pexp_construct (ctr, opt) -> dom_construct (ctr, opt)
+  | Pexp_construct ({txt=Lident "::"}, Some {pexp_desc=Pexp_tuple lst}) ->
+    let lst' = flatten_list_ctor expr in
+    dom_list_block lst'
+  | Pexp_construct (ctor, opt) -> dom_construct (ctor, opt)
   | Pexp_variant _ -> raise (NotImplemented "variant")
   | Pexp_record _ -> raise (NotImplemented "Pexp_record")
   | Pexp_ifthenelse (cond, e1, Some e2) -> dom_ifthenelse_block cond e1 e2
@@ -520,22 +521,33 @@ and params_mutation n =
 and items_mutation n =
   Xml.createDom "mutation" [("items", string_of_int n)] []
 
+and dom_empty_list () =
+  let mutation = items_mutation 0 in
+  dom_block "lists_create_with_typed" [mutation]
+
+and flatten_list_ctor exp =
+  match exp.pexp_desc with
+    | Pexp_construct ({txt=Lident ("[]")}, None) -> []
+    | Pexp_construct ({txt=Lident ("::")}, Some {pexp_desc=Pexp_tuple (e1 :: [e2])}) ->
+      e1 :: (flatten_list_ctor e2)
+    | _ -> assert false
+
 and arguments_mutation names =
   let children = List.map (fun name ->
       Xml.createDom "item" [] [Xml.createTextDom name]) names in
   Xml.createDom "mutation" [] children
 
 and dom_list_block exprs =
-  let rec h dom es = match es with
-    | [] -> dom
+  let rec h es i = match es with
+    | [] -> []
     | expr :: rest ->
-      let nth = (List.length exprs) - (List.length es) in
-      let nstr = string_of_int nth in
-      let dom' = append_value dom ("ADD" ^ nstr) (dom_expr expr) in
-      h dom' rest
+      let i_str = string_of_int i in
+      let value = dom_block_value ("ADD" ^ i_str) (dom_expr expr) in
+      value :: (h rest (i + 1))
   in
-  let dom = dom_block "lists_create_with_typed" [] in
-  h dom exprs
+  let mutation = items_mutation (List.length exprs) in
+  let values = h exprs 0 in
+  dom_block "lists_create_with_typed" (mutation :: values)
 
 and dom_builtint_fst_app exp =
   let domExp = dom_expr exp in
