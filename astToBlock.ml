@@ -82,9 +82,9 @@ and dom_constant = function
   | Pconst_string (str, _) -> dom_string_block str
 
 (* The type of patterns *)
-and dom_patt patt = match patt with
+and dom_pattern patt = match patt.ppat_desc with
   | Ppat_any -> raise (NotImplemented "Any")
-  | Ppat_var (loc) -> raise (NotImplemented ("tvar" ^ loc.txt))
+  | Ppat_var var -> dom_var_field "VAR" true var.txt
   | Ppat_tuple (patt_list) -> raise (NotImplemented "tuplepatt")
   | Ppat_record _ -> raise (NotImplemented "patt-record")
   | Ppat_type _ -> raise (NotImplemented "patt-type")
@@ -358,11 +358,6 @@ and dom_core_type core_type =
   | Ptyp_package pkg -> raise (NotImplemented "Package types")
   | Ptyp_extension xtn -> raise (NotImplemented "Extension types")
 
-and dom_pattern pat =
-  match pat.ppat_desc with
-  | Ppat_var var -> dom_var_field "VAR" true var.txt
-  | _ -> raise (NotImplemented "Unsupported pattern")
-
 and dom_let_block rec_flag binding opt_exp2 =
   let is_rec = match rec_flag with
     | Recursive -> true
@@ -370,6 +365,10 @@ and dom_let_block rec_flag binding opt_exp2 =
   let is_statement = opt_exp2 = None in
   match (binding, opt_exp2) with
   | ({pvb_pat=patt; pvb_expr=exp1}, _) ->
+     let _ = match patt.ppat_desc with
+       | Ppat_var var -> ()
+       | _ -> raise (NotImplemented "Unsupported pattern in let")
+      in
      let field = dom_pattern patt in
      let (args, exp1) = flatten_arguments exp1 in
      let (mutation, arg_fields) = dom_arguments args in
