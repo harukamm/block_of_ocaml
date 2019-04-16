@@ -88,6 +88,12 @@ and dom_pattern patt = match patt.ppat_desc with
   | Ppat_tuple (patt_list) -> raise (NotImplemented "tuplepatt")
   | Ppat_record _ -> raise (NotImplemented "patt-record")
   | Ppat_type _ -> raise (NotImplemented "patt-type")
+  | Ppat_construct ({txt=Lident "[]"}, None) ->
+    dom_list_pattern_block []
+  | Ppat_construct ({txt=Lident "::"}, Some {ppat_desc=Ppat_tuple lst}) ->
+    let lst' = flatten_list_pattern_ctor patt in
+    dom_list_pattern_block lst'
+  | Ppat_construct (ctor, opt) -> raise (NotImplemented "patt-ctor")
   | _ -> raise (NotImplemented "patt")
 
 (* The type of expressions *)
@@ -548,6 +554,13 @@ and flatten_list_ctor exp =
       e1 :: (flatten_list_ctor e2)
     | _ -> assert false
 
+and flatten_list_pattern_ctor patt =
+  match patt.ppat_desc with
+    | Ppat_construct ({txt=Lident ("::")}, Some {ppat_desc=Ppat_tuple (e1 :: [e2])}) ->
+      e1 :: (flatten_list_pattern_ctor e2)
+    | _ ->
+      [patt]
+
 and arguments_mutation names =
   let children = List.map (fun name ->
       Xml.createDom "item" [] [Xml.createTextDom name]) names in
@@ -564,6 +577,17 @@ and dom_list_block exprs =
   let mutation = items_mutation (List.length exprs) in
   let values = h exprs 0 in
   dom_block "lists_create_with_typed" (mutation :: values)
+
+and dom_list_pattern_block patts =
+  match patts with
+    | [] -> dom_block "empty_construct_pattern_typed" []
+    | {ppat_desc=Ppat_var var1} :: [{ppat_desc=Ppat_var var2}] ->
+      let first = dom_var_field "FIRST" true var1.txt in
+      let cons = dom_var_field "CONS" true var2.txt in
+      let fields = first :: [cons] in
+      dom_block "cons_construct_pattern_value_typed" fields
+    | p1 :: [p2] -> raise (NotImplemented "Only variable is allowed in list pattern")
+    | _ -> raise (NotImplemented "More than 2-length list pattern")
 
 and dom_builtint_fst_app exp =
   let domExp = dom_expr exp in
