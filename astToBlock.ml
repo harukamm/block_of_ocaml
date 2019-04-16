@@ -103,7 +103,7 @@ and dom_expr expr = match expr.pexp_desc with
       raise (NotImplemented "argument with label")
     else
       dom_app_lst_block exp1 (snd exp2) (List.map snd rest)
-  | Pexp_match _ -> raise (NotImplemented "match")
+  | Pexp_match (exp, cases) -> dom_match exp cases
   | Pexp_try _ -> raise (NotImplemented "try")
   | Pexp_tuple (x :: y :: rest) ->
     if List.length rest = 0 then
@@ -358,6 +358,12 @@ and dom_core_type core_type =
   | Ptyp_package pkg -> raise (NotImplemented "Package types")
   | Ptyp_extension xtn -> raise (NotImplemented "Extension types")
 
+and dom_case case = match case with
+  | {pc_lhs=left; pc_guard=Some _; pc_rhs=right} ->
+    raise (NotImplemented "Pattern with guard")
+  | {pc_lhs=left; pc_guard=None; pc_rhs=right} ->
+    (dom_pattern left, dom_expr right)
+
 and dom_let_block rec_flag binding opt_exp2 =
   let is_rec = match rec_flag with
     | Recursive -> true
@@ -509,6 +515,21 @@ and dom_app_block expr1 expr2 =
   let domExp1 = dom_expr expr1 in
   let domExp2 = dom_expr expr2 in
   dom_app_block' domExp1 domExp2
+
+and dom_match expr cases =
+  let case_size = List.length cases in
+  let mutation = items_mutation case_size in
+  let rec h i case_list = match case_list with
+    | [] -> []
+    | case :: rest ->
+      let (l, r) = dom_case case in
+      let i_str = string_of_int i in
+      let valuel = dom_block_value ("PATTERN" ^ i_str) l in
+      let valuer = dom_block_value ("OUTPUT" ^ i_str) r in
+      valuel :: valuer :: (h (i + 1) rest)
+  in
+  let values = h 0 cases in
+  dom_block "match_typed" (mutation :: values)
 
 and params_mutation n =
   Xml.createDom "mutation" [("params", string_of_int n)] []
