@@ -535,7 +535,8 @@ and dom_match expr cases =
       valuel :: valuer :: (h (i + 1) rest)
   in
   let values = h 0 cases in
-  dom_block "match_typed" (mutation :: values)
+  let input_value = dom_block_value "INPUT" (dom_expr expr) in
+  dom_block "match_typed" (mutation :: input_value :: values)
 
 and params_mutation n =
   Xml.createDom "mutation" [("params", string_of_int n)] []
