@@ -365,10 +365,6 @@ and dom_let_block rec_flag binding opt_exp2 =
   let is_statement = opt_exp2 = None in
   match (binding, opt_exp2) with
   | ({pvb_pat=patt; pvb_expr=exp1}, _) ->
-     let _ = match patt.ppat_desc with
-       | Ppat_var var -> ()
-       | _ -> raise (NotImplemented "Unsupported pattern in let")
-      in
      let field = dom_pattern patt in
      let (args, exp1) = flatten_arguments exp1 in
      let (mutation, arg_fields) = dom_arguments args in
